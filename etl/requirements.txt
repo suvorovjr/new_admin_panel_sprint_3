@@ -6,3 +6,4 @@ pydantic==2.9.2
 backoff==2.2.1
 redis==5.2.0
 elasticsearch==8.15.1
+loguru==0.7.2
