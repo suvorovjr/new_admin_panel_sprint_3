@@ -4,6 +4,7 @@ from uuid import UUID
 
 import redis
 import settings
+from backoff import expo, on_exception
 from settings import app_logger
 
 
@@ -12,6 +13,13 @@ class RedisStorage:
         year=2020, month=1, day=1, hour=0, minute=0, second=0
     )
 
+    @on_exception(
+        expo,
+        redis.ConnectionError,
+        max_tries=10,
+        max_time=100,
+        logger=app_logger,
+    )
     def __init__(self):
         try:
             self.redis_client = redis.Redis(
@@ -104,9 +112,9 @@ class RedisStorage:
 
     def set_completed_status(self) -> None:
         """
-        Завершает проверку, устанавливая статус на "completed"
+        Завершает проверку, устанавливая статус на "COMPLETED"
         """
-        self.set_check_status('completed')
+        self.set_check_status('COMPLETED')
 
     def set_check_data(self) -> None:
         """

@@ -1,12 +1,20 @@
 from typing import List
 
-from elasticsearch import Elasticsearch, helpers
+from backoff import expo, on_exception
+from elasticsearch import Elasticsearch, exceptions, helpers
 from schemas import FilmWork
 from settings import app_logger
 
 from etl import settings
 
 
+@on_exception(
+    expo,
+    exceptions.ConnectionError,
+    max_tries=10,
+    max_time=100,
+    logger=app_logger,
+)
 def get_elasticsearch_client() -> Elasticsearch:
     """Создает и возвращает экземпляр клиента Elasticsearch."""
     return Elasticsearch(

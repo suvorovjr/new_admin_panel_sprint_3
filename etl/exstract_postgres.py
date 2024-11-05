@@ -1,15 +1,21 @@
 from typing import Any, Generator, List
 from uuid import UUID
 
-import backoff
 import psycopg
+from backoff import expo, on_exception
 from pg_queries import get_film_works_query
 from psycopg import OperationalError
 from schemas import FilmWork
 
+from etl.settings import app_logger
 
-@backoff.on_exception(
-    backoff.expo, psycopg.OperationalError, max_tries=5, jitter=None
+
+@on_exception(
+    expo,
+    psycopg.OperationalError,
+    max_tries=10,
+    max_time=100,
+    logger=app_logger,
 )
 def extract_data(
     pg_cursor: psycopg.Cursor, film_work_ids: List[UUID], batch_size: int = 100

@@ -3,10 +3,18 @@ from typing import List
 from uuid import UUID
 
 import psycopg
+from backoff import expo, on_exception
 from pg_queries import get_all_modify_ids_query
 from settings import app_logger
 
 
+@on_exception(
+    expo,
+    psycopg.OperationalError,
+    max_tries=10,
+    max_time=100,
+    logger=app_logger,
+)
 def get_all_modify_film_works(
     pg_cursor: psycopg.Cursor, last_update: datetime
 ) -> List[UUID]:
