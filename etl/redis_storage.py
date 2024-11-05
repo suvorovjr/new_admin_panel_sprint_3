@@ -1,21 +1,32 @@
 from datetime import datetime
 from typing import List
 from uuid import UUID
+
 import redis
 import settings
+from backoff import expo, on_exception
 from settings import app_logger
 
 
 class RedisStorage:
-    DEFAULT_DATE = datetime(year=2020, month=1, day=1, hour=0, minute=0, second=0)
+    DEFAULT_DATE = datetime(
+        year=2020, month=1, day=1, hour=0, minute=0, second=0
+    )
 
+    @on_exception(
+        expo,
+        redis.ConnectionError,
+        max_tries=10,
+        max_time=100,
+        logger=app_logger,
+    )
     def __init__(self):
         try:
             self.redis_client = redis.Redis(
                 host=settings.REDIS_HOST,
                 password=settings.REDIS_PASSWORD,
                 port=settings.REDIS_PORT,
-                db=settings.REDIS_DB
+                db=settings.REDIS_DB,
             )
             self.last_check_date_key = 'last_check_date'
             self.check_status_key = 'check_status'
@@ -42,7 +53,9 @@ class RedisStorage:
         :param date: Дата последней проверки.
         """
         self.redis_client.set(self.last_check_date_key, date.isoformat())
-        app_logger.debug(f'Дата последней проверки установлена на {date.isoformat()}')
+        app_logger.debug(
+            f'Дата последней проверки установлена на {date.isoformat()}'
+        )
 
     def get_check_status(self) -> str:
         """
@@ -50,7 +63,9 @@ class RedisStorage:
         :return: Статус проверки (по умолчанию "not_completed").
         """
         status = self.redis_client.get(self.check_status_key)
-        app_logger.info(f'Текущий статус: {status.decode() if status else "NOT_STARTED"}')
+        app_logger.info(
+            f'Текущий статус: {status.decode() if status else "NOT_STARTED"}'
+        )
         return status.decode() if status else 'NOT_STARTED'
 
     def set_check_status(self, status: str) -> None:
@@ -67,7 +82,9 @@ class RedisStorage:
         :param ids: Список уникальных ID.
         """
         if ids:
-            self.redis_client.sadd(self.ids_set_key, *[str(id_) for id_ in ids])
+            self.redis_client.sadd(
+                self.ids_set_key, *[str(id_) for id_ in ids]
+            )
             app_logger.debug(f'Добавлены ID в Redis: {ids}')
 
     def get_all_ids(self) -> List[UUID]:
@@ -75,7 +92,10 @@ class RedisStorage:
         Получает все ID из Redis.
         :return: Список уникальных ID.
         """
-        ids = [UUID(id_str.decode()) for id_str in self.redis_client.smembers(self.ids_set_key)]
+        ids = [
+            UUID(id_str.decode())
+            for id_str in self.redis_client.smembers(self.ids_set_key)
+        ]
         app_logger.debug(f'Получены ID из Redis: {ids}')
         return ids
 
@@ -85,18 +105,22 @@ class RedisStorage:
         :param ids: Список ID для удаления.
         """
         if ids:
-            self.redis_client.srem(self.ids_set_key, *[str(id_) for id_ in ids])
+            self.redis_client.srem(
+                self.ids_set_key, *[str(id_) for id_ in ids]
+            )
             app_logger.debug(f'Удалены ID из Redis: {ids}')
 
     def set_completed_status(self) -> None:
         """
-        Завершает проверку, устанавливая статус на "completed"
+        Завершает проверку, устанавливая статус на "COMPLETED"
         """
-        self.set_check_status('completed')
+        self.set_check_status('COMPLETED')
 
     def set_check_data(self) -> None:
         """
         Обновляет дату проверки
         """
         self.set_last_check_date(datetime.now())
-        app_logger.debug(f'Дата проверки обновлена на {datetime.now().isoformat()}')
+        app_logger.debug(
+            f'Дата проверки обновлена на {datetime.now().isoformat()}'
+        )

@@ -1,22 +1,24 @@
-from typing import List, Generator, Any
+from typing import Any, Generator, List
 from uuid import UUID
-import psycopg
-from psycopg import OperationalError
-import backoff
 
+import psycopg
+from backoff import expo, on_exception
 from pg_queries import get_film_works_query
+from psycopg import OperationalError
 from schemas import FilmWork
 
+from etl.settings import app_logger
 
-@backoff.on_exception(backoff.expo,
-                      psycopg.OperationalError,
-                      max_tries=5,
-                      jitter=None
-                      )
+
+@on_exception(
+    expo,
+    psycopg.OperationalError,
+    max_tries=10,
+    max_time=100,
+    logger=app_logger,
+)
 def extract_data(
-        pg_cursor: psycopg.Cursor,
-        film_work_ids: List[UUID],
-        batch_size: int = 100
+    pg_cursor: psycopg.Cursor, film_work_ids: List[UUID], batch_size: int = 100
 ) -> Generator[List[dict[str, Any]], None, None]:
     """
     Извлекает данные о фильмах из базы данных PostgreSQL с использованием курсора.
@@ -40,9 +42,7 @@ def extract_data(
 
 
 def transform_data(
-        pg_cursor: psycopg.Cursor,
-        film_work_ids: List[UUID],
-        batch_size: int = 100
+    pg_cursor: psycopg.Cursor, film_work_ids: List[UUID], batch_size: int = 100
 ) -> Generator[list[FilmWork], None, None]:
     """
     Преобразует извлеченные данные в модели Pydantic.
@@ -55,5 +55,7 @@ def transform_data(
     Yields:
         Generator[List[FilmWork], None, None]: Генератор, выдающий модели FilmWork.
     """
-    for batch in extract_data(pg_cursor=pg_cursor, film_work_ids=film_work_ids, batch_size=batch_size):
+    for batch in extract_data(
+        pg_cursor=pg_cursor, film_work_ids=film_work_ids, batch_size=batch_size
+    ):
         yield [FilmWork(**row) for row in batch]

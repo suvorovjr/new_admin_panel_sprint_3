@@ -7,3 +7,6 @@ backoff==2.2.1
 redis==5.2.0
 elasticsearch==8.15.1
 loguru==0.7.2
+flake8==4.0.1
+isort==5.13.2
+blue==0.9.1
