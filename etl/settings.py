@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 from loguru import logger
 
@@ -15,7 +16,9 @@ load_dotenv(ENV_FILE_PATH)
 def get_env_variable(var_name, default=None, required=True):
     value = os.getenv(var_name, default)
     if required and value is None:
-        raise EnvironmentError(f'Отсутствует переменная окружения "{var_name}".')
+        raise EnvironmentError(
+            f'Отсутствует переменная окружения "{var_name}".'
+        )
     return value
 
 
@@ -28,7 +31,7 @@ def configure_logger():
         level='INFO',
         format=formatter,
         rotation='50 MB',
-        compression='zip'
+        compression='zip',
     )
     return logger
 
@@ -45,9 +48,13 @@ DSL = {
 }
 
 ELASTICSEARCH_URL = get_env_variable('ELASTICSEARCH_URL', required=False)
-ELASTICSEARCH_INDEX_NAME = get_env_variable('ELASTICSEARCH_INDEX_NAME', required=False)
+ELASTICSEARCH_INDEX_NAME = get_env_variable(
+    'ELASTICSEARCH_INDEX_NAME', required=False
+)
 
-REDIS_HOST = get_env_variable('REDIS_HOST', default='localhost', required=False)
+REDIS_HOST = get_env_variable(
+    'REDIS_HOST', default='localhost', required=False
+)
 REDIS_PASSWORD = get_env_variable('REDIS_PASSWORD', required=False)
 REDIS_PORT = int(get_env_variable('REDIS_PORT', default=6379, required=False))
 REDIS_DB = int(get_env_variable('REDIS_DB', default=0, required=False))

@@ -1,7 +1,8 @@
 from psycopg import sql
 
 # Запрос для получения фильмов и связанных данных по переданным идентификаторам
-get_film_works_query = sql.SQL("""
+get_film_works_query = sql.SQL(
+    """
 SELECT 
     fw.id,
     fw.title,
@@ -29,10 +30,12 @@ GROUP BY
     fw.id
 ORDER BY 
     fw.modified;
-""")
+"""
+)
 
 # Запрос для получения всех ID фильмов, измененных с момента последней проверки
-get_all_modify_ids_query = sql.SQL("""
+get_all_modify_ids_query = sql.SQL(
+    """
 SELECT fw.id 
 FROM content.film_work fw
 LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
@@ -43,4 +46,5 @@ WHERE fw.modified > %s
    OR p.modified > %s
    OR g.modified > %s
 GROUP BY fw.id;
-""")
+"""
+)
