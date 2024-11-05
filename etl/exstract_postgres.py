@@ -43,7 +43,7 @@ def transform_data(
         pg_cursor: psycopg.Cursor,
         film_work_ids: List[UUID],
         batch_size: int = 100
-) -> Generator[List[FilmWork], None, None]:
+) -> Generator[list[FilmWork], None, None]:
     """
     Преобразует извлеченные данные в модели Pydantic.
 
