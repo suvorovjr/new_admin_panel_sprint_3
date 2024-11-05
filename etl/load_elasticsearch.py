@@ -31,7 +31,13 @@ def create_bulk_action(film_work: FilmWork) -> dict:
     }
 
 
-@on_exception(expo, exceptions.ConnectionError, max_tries=10, max_time=100, logger=app_logger)
+@on_exception(
+    expo,
+    exceptions.ConnectionError,
+    max_tries=10,
+    max_time=100,
+    logger=app_logger,
+)
 def check_exists_index(es: Elasticsearch):
     """
     Проверяет существование индекса, если его нет, то попытается создать его
@@ -43,15 +49,23 @@ def check_exists_index(es: Elasticsearch):
     index_name = settings.ELASTICSEARCH_INDEX_NAME
 
     if not es.indices.exists(index=index_name):
-        app_logger.info(f'Индекса ElasticSearch с именем {index_name} не существует')
+        app_logger.info(
+            f'Индекса ElasticSearch с именем {index_name} не существует'
+        )
         try:
-            es.indices.create(index=index_name, body=settings.ELASTICSEARCH_SCHEMA)
+            es.indices.create(
+                index=index_name, body=settings.ELASTICSEARCH_SCHEMA
+            )
             app_logger.info()
         except exceptions.ConnectionError as e:
-            app_logger.error(f'Ошибка соединения при создании индекса "{index_name}": {e}')
+            app_logger.error(
+                f'Ошибка соединения при создании индекса "{index_name}": {e}'
+            )
             raise
         except exceptions.BadRequestError as e:
-            app_logger.error(f'Неправильный запрос при создании индекса "{index_name}": {e}')
+            app_logger.error(
+                f'Неправильный запрос при создании индекса "{index_name}": {e}'
+            )
             raise
 
 
