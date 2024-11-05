@@ -69,6 +69,13 @@ def check_exists_index(es: Elasticsearch):
             raise
 
 
+@on_exception(
+    expo,
+    exceptions.ConnectionError,
+    max_tries=10,
+    max_time=100,
+    logger=app_logger,
+)
 def load_film_works_to_elasticsearch(film_works: List[FilmWork]) -> None:
     """Загружает список объектов FilmWork в Elasticsearch."""
     es = get_elasticsearch_client()
