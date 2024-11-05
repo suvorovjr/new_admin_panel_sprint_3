@@ -15,18 +15,18 @@ load_dotenv(ENV_FILE_PATH)
 def get_env_variable(var_name, default=None, required=True):
     value = os.getenv(var_name, default)
     if required and value is None:
-        raise EnvironmentError(f"The environment variable '{var_name}' is missing.")
+        raise EnvironmentError(f'Отсутствует переменная окружения "{var_name}".')
     return value
 
 
 def configure_logger():
-    FORMATTER = '{time:YYYY-MM-DD HH:mm:ss} | {level} | {file}:{function}:{line} | {message}'
-    logger.remove()  # Clear any existing loggers
-    logger.add(sys.stdout, level='DEBUG', format=FORMATTER)
+    formatter = '{time:YYYY-MM-DD HH:mm:ss} | {level} | {file}:{function}:{line} | {message}'
+    logger.remove()
+    logger.add(sys.stdout, level='DEBUG', format=formatter)
     logger.add(
         LOGS_DIR / 'etl_logger.log',
         level='INFO',
-        format=FORMATTER,
+        format=formatter,
         rotation='50 MB',
         compression='zip'
     )
