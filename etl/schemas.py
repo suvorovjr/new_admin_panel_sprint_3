@@ -8,22 +8,22 @@ class UUIDMixin(BaseModel):
 
 
 class PersonDetail(UUIDMixin):
-    full_name: str
+    name: str = Field(alias='full_name')
 
 
 class FilmWork(UUIDMixin):
-    title: str
-    description: Optional[str] = None
     imdb_rating: Optional[float] = None
     genres: List[str]
-
-    directors: List[PersonDetail] = Field(default_factory=list)
-    actors: List[PersonDetail] = Field(default_factory=list)
-    writers: List[PersonDetail] = Field(default_factory=list)
+    title: str
+    description: Optional[str] = None
 
     directors_names: str = Field(default_factory=str)
     actors_names: str = Field(default_factory=str)
     writers_names: str = Field(default_factory=str)
+
+    directors: List[PersonDetail] = Field(default_factory=list)
+    actors: List[PersonDetail] = Field(default_factory=list)
+    writers: List[PersonDetail] = Field(default_factory=list)
 
     @model_validator(mode='before')
     @classmethod
@@ -36,19 +36,20 @@ class FilmWork(UUIDMixin):
             'writer': ('writers', 'writers_names'),
         }
 
-        for role in roles.values():
-            detail_list, name_list = role
+        for detail_list, name_list in roles.values():
             data[detail_list] = []
             data[name_list] = ''
 
         for person in person_details:
-            role = person.get('role', '').lower()
-            if role in roles:
-                detail_list, name_list = roles[role]
-                data[detail_list].append(PersonDetail(**person))
+            role = person.get('role')
+            if role is not None:
+                role = role.lower()
+                if role in roles:
+                    detail_list, name_list = roles[role]
+                    data[detail_list].append(PersonDetail(**person))
 
-                if data[name_list]:
-                    data[name_list] += ', ' + person['full_name']
-                else:
-                    data[name_list] = person['full_name']
+                    if data[name_list]:
+                        data[name_list] += ', ' + person['full_name']
+                    else:
+                        data[name_list] = person['full_name']
         return data
