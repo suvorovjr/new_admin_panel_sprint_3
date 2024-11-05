@@ -3,18 +3,26 @@ from pg_queries import get_all_modify_ids_query
 from typing import List
 from datetime import datetime
 import psycopg
+from settings import app_logger
 
 
-def get_all_modify_film_works(pg_cursor: psycopg.Cursor, data: datetime) -> List[UUID]:
+def get_all_modify_film_works(pg_cursor: psycopg.Cursor, last_update: datetime) -> List[UUID]:
     """
-    Извлекает все id фильмов, которые были изменены после заданной даты.
+    Извлекает все ID фильмов, которые были изменены после заданной даты.
+
     Args:
         pg_cursor (psycopg.Cursor): Курсор для выполнения запросов к базе данных.
-        data (datetime): Дата последней загрузку данных. Все фильмы, поля которых были изменены после этой даты, будут извлечены.
+        last_update (datetime): Дата последней загрузки данных.
+        Все фильмы, поля которых были изменены после этой даты, будут извлечены.
+
     Returns:
         List[UUID]: Список UUID фильмов, которые были изменены.
     """
-
-    pg_cursor.execute(get_all_modify_ids_query, (data, data, data))
-    modified_film_work_ids = [row['id'] for row in pg_cursor.fetchall()]
-    return modified_film_work_ids
+    try:
+        pg_cursor.execute(get_all_modify_ids_query, (last_update, last_update, last_update))
+        modified_film_work_ids = [row['id'] for row in pg_cursor.fetchall()]
+        app_logger.info(f'Извлечено {len(modified_film_work_ids)} измененных фильмов после {last_update.isoformat()}')
+        return modified_film_work_ids
+    except psycopg.Error as e:
+        app_logger.error(f'Ошибка при извлечении измененных фильмов: {e}')
+        return []
