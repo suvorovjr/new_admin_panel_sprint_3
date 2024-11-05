@@ -1,0 +1,66 @@
+version: '3'
+
+services:
+  etl_service:
+    build:
+      context: .
+      dockerfile: 'Dockerfile'
+    container_name: 'etl_service'
+    restart: always
+    volumes:
+      - ./etl:/code/etl
+    env_file:
+      - .env
+    depends_on:
+      - postgres_db
+      - elasticsearch_db
+      - redis
+    networks:
+      - etl_network
+
+  postgres_db:
+    image: postgres:16
+    container_name: 'postgres_db'
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - ./.env
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+        ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - etl_network
+
+  redis:
+    image: redis:6.2
+    ports:
+      - '6379:6379'
+    networks:
+      - etl_network
+
+  elasticsearch_db:
+    image: elasticsearch:8.6.2
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - '9200:9200'
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - etl_network
+
+networks:
+  etl_network:
+
+volumes:
+  postgres_data:
+  elasticsearch_data:

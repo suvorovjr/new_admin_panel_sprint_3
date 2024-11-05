@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from loguru import logger
 
 BASE_DIR = Path(__file__).resolve().parent
-ENV_FILE_PATH = BASE_DIR / '.env'
+ENV_FILE_PATH = BASE_DIR.parent / '.env'
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
 
@@ -39,11 +39,11 @@ def configure_logger():
 app_logger = configure_logger()
 
 DSL = {
-    'dbname': get_env_variable('POSTGRES_NAME'),
+    'dbname': get_env_variable('POSTGRES_DB'),
     'user': get_env_variable('POSTGRES_USER'),
     'password': get_env_variable('POSTGRES_PASSWORD'),
-    'host': get_env_variable('POSTGRES_HOST'),
-    'port': get_env_variable('POSTGRES_PORT'),
+    'host': get_env_variable('SQL_HOST'),
+    'port': get_env_variable('SQL_PORT'),
     'options': '-c search_path=content',
 }
 
